@@ -2,7 +2,7 @@ name := "MapCounter"
 
 version := "1.0"
 
-scalaVersion := "2.13.14"
+scalaVersion := "3.3.3"
 
 lazy val pekkoVersion = "1.1.1"
 lazy val osm4scalaVersion = "1.0.11"
@@ -18,5 +18,5 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.13",
   "org.apache.pekko" %% "pekko-actor-testkit-typed" % pekkoVersion % Test,
   "org.scalatest" %% "scalatest" % "3.2.19" % Test,
-  "com.acervera.osm4scala" %% "osm4scala-core" % osm4scalaVersion
+  ("com.acervera.osm4scala" %% "osm4scala-core" % osm4scalaVersion).cross(CrossVersion.for3Use2_13)
 )
