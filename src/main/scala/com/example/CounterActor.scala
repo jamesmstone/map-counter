@@ -15,9 +15,10 @@ object CounterActor {
 
   case class CounterResponse(replyTo: ActorRef[CounterActor.CounterMsg], counter: mutable.Map[String, Long]) extends CounterMsg
 
-  private val tagsToStore = List("emergency", "public_transport", "building" ,"cycleway", "highway") // todo consider getting from config
+  private val tagsToStore = List("emergency", "public_transport", "building", "cycleway", "highway") // todo consider getting from config
+
   def apply(): Behavior[CounterMsg] = Behaviors.receive { (context, message) =>
-    var i : Long = 0L
+    var i: Long = 0L
     message match {
       case CounterResponse(_, _) =>
         Behaviors.same
@@ -27,26 +28,20 @@ object CounterActor {
         val counts = mutable.Map[String, Long]() // todo consider moving so not re instantiated on every message, ie we share across messages then at the end request the total back in a different style message
 
         entityIterator.foreach {
-          case NodeEntity(id, latitude, longitude, tags, info) => {
+          case NodeEntity(id, latitude, longitude, tags, info) =>
             i += 1L
-            tagsToStore.foreach(tag => {
-              tags.get(tag) match {
-                case Some(v) => {
-                  val keys = v.split(';')
-                  keys.foreach(k => {
-                    counts.updateWith(s"$tag: $k") {
-                      case Some(value) => Some(value + 1L)
-                      case None => Some(1L)
-                    }
-                  })
-
+            tagsToStore.foreach { tag =>
+              tags.get(tag).foreach { v =>
+                v.split(';').foreach { k =>
+                  counts.updateWith(s"$tag: $k") {
+                    _.map(_ + 1L).orElse(Some(1L))
+                  }
                 }
-                case _ => false
               }
-            })
-          }
-          case _ => false
+            }
+          case _ =>
         }
+
         counts.updateWith("*") {
           case Some(value) => Some(value + i)
           case None => Some(i)

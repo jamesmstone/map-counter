@@ -40,12 +40,9 @@ class ControllerActor(context: ActorContext[ControllerMsg], pbfFile: File) {
       Behaviors.same
 
     case CounterResponseMsg(response) =>
-      response.counter.keysIterator.foreach(key=>{
-       counter.updateWith(key) {
-         case Some(value) => Some(value + response.counter.getOrElse(key, 0L))
-         case None => Some(response.counter.getOrElse(key, 0L))
-       }
-      })
+      response.counter.iterator.foreach { case (key, value) =>
+        counter.updateWith(key)(_.map(_ + value).orElse(Some(value)))
+      }
       if (actorPool.nonEmpty) {
         nextBlob(response.replyTo)
       }
