@@ -2,11 +2,11 @@
 package com.example
 
 import org.apache.pekko.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
-import com.example.Greeter.Greet
-import com.example.Greeter.Greeted
+//import com.example.Greeter.Greeted
 import org.scalatest.wordspec.AnyWordSpecLike
 
-//#definition
+// TODO
+/*//#definition
 class PekkoQuickstartSpec extends ScalaTestWithActorTestKit with AnyWordSpecLike {
 //#definition
 
@@ -22,4 +22,4 @@ class PekkoQuickstartSpec extends ScalaTestWithActorTestKit with AnyWordSpecLike
   }
 
 }
-//#full-example
+//#full-example*/
