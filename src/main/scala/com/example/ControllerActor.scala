@@ -62,15 +62,19 @@ class ControllerActor(context: ActorContext[ControllerMsg], pbfFile: File) {
       context.stop(counterActor)
 
       if (actorPool.isEmpty) {
-        println("Results:")
-        counter.iterator.foreach(item=>{
-          println(s" ${item._1}: ${item._2}")
-
-        })
-        println(f"Finished in ${(System.currentTimeMillis() - startTime) / 1e3}%,2.2f sec.")
+        printResults()
         pbfIS.close()
         context.system.terminate()
       }
     }
+  }
+
+  private def printResults(): Unit = {
+    println("Results:")
+    counter.toVector.sortBy(_._2).iterator.foreach(item => {
+      println(s" ${item._1}: ${item._2}")
+
+    })
+    println(f"Finished in ${(System.currentTimeMillis() - startTime) / 1e3}%,2.2f sec.")
   }
 }
