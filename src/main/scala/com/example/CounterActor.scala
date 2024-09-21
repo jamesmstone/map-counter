@@ -13,7 +13,7 @@ object CounterActor {
 
   case class BlobTupleMsg(i: Int, header: BlobHeader, blob: Blob, replyTo: ActorRef[ControllerActor.ControllerMsg]) extends CounterMsg
 
-  case class CounterResponse(replyTo: ActorRef[CounterActor.CounterMsg], counter: mutable.Map[String, Long]) extends CounterMsg
+  case class CounterResponse(replyTo: ActorRef[CounterActor.CounterMsg], counter: Map[String, Long]) extends CounterMsg
 
   private val tagsToStore = List("emergency", "public_transport", "building", "cycleway", "highway") // todo consider getting from config
 
@@ -25,27 +25,21 @@ object CounterActor {
       case BlobTupleMsg(_, header, blob, replyTo) =>
         val entityIterator = fromBlob(blob)
 
-        val counts = mutable.Map[String, Long]() // todo consider moving so not re instantiated on every message, ie we share across messages then at the end request the total back in a different style message
-
-        entityIterator.foreach {
-          case NodeEntity(id, latitude, longitude, tags, info) =>
-            i += 1L
-            tagsToStore.foreach { tag =>
-              tags.get(tag).foreach { v =>
-                v.split(';').foreach { k =>
-                  counts.updateWith(s"$tag: $k") {
-                    _.map(_ + 1L).orElse(Some(1L))
-                  }
+        // todo consider moving so not re instantiated on every message, ie we share across messages then at the end request the total back in a different style message
+        val counts = entityIterator.foldLeft(Map[String, Long]().withDefaultValue(0L)) {
+          case (acc, NodeEntity(id, latitude, longitude, tags, info)) =>
+            val updatedAcc = tagsToStore.foldLeft(acc) { (innerAcc, tag) =>
+              tags.get(tag).fold(innerAcc) { v =>
+                v.split(';').foldLeft(innerAcc) { (finalAcc, k) =>
+                  finalAcc.updated(s"$tag: $k", finalAcc(s"$tag: $k") + 1L)
                 }
               }
             }
-          case _ =>
+            updatedAcc.updated("*", updatedAcc("*") + 1L)
+
+          case (acc, _) => acc
         }
 
-        counts.updateWith("*") {
-          case Some(value) => Some(value + i)
-          case None => Some(i)
-        }
         replyTo ! ControllerActor.CounterResponseMsg(CounterResponse(context.self, counts))
         Behaviors.same
     }
